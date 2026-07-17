@@ -56,12 +56,12 @@
     <div class="section-block">
       <div class="section-title">⚡ Thêm nhanh</div>
       <div class="quick-grid">
-        <button class="quick-btn" onclick="quickAdd('🍜','Ăn sáng',25000)"><span>🍜</span>Ăn sáng<small>25k</small></button>
-        <button class="quick-btn" onclick="quickAdd('🍚','Ăn trưa',40000)"><span>🍚</span>Ăn trưa<small>40k</small></button>
-        <button class="quick-btn" onclick="quickAdd('🍲','Ăn tối',45000)"><span>🍲</span>Ăn tối<small>45k</small></button>
-        <button class="quick-btn" onclick="quickAdd('☕','Cà phê',20000)"><span>☕</span>Cà phê<small>20k</small></button>
-        <button class="quick-btn" onclick="quickAdd('⛽','Xăng',50000)"><span>⛽</span>Xăng<small>50k</small></button>
-        <button class="quick-btn" onclick="quickAdd('🛒','Đi chợ',100000)"><span>🛒</span>Đi chợ<small>100k</small></button>
+        <button class="quick-btn" onclick="openQuickAdd('🍜','Ăn sáng')"><span>🍜</span>Ăn sáng</button>
+        <button class="quick-btn" onclick="openQuickAdd('🍚','Ăn trưa')"><span>🍚</span>Ăn trưa</button>
+        <button class="quick-btn" onclick="openQuickAdd('🍲','Ăn tối')"><span>🍲</span>Ăn tối</button>
+        <button class="quick-btn" onclick="openQuickAdd('☕','Cà phê')"><span>☕</span>Cà phê</button>
+        <button class="quick-btn" onclick="openQuickAdd('⛽','Xăng')"><span>⛽</span>Xăng</button>
+        <button class="quick-btn" onclick="openQuickAdd('🛒','Đi chợ')"><span>🛒</span>Đi chợ</button>
       </div>
     </div>
 
@@ -76,6 +76,19 @@
       <div id="today-list"><div class="empty-msg">Chưa có khoản chi nào hôm nay 🎉</div></div>
     </div>
 
+  </div>
+
+  <!-- QUICK ADD AMOUNT MODAL -->
+  <div id="quick-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeQuickModal()"></div>
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeQuickModal()">✕</button>
+      <div class="modal-icon" id="quick-icon" style="font-size:48px;margin-bottom:8px">🍜</div>
+      <h2 id="quick-label">Ăn sáng</h2>
+      <div class="modal-label">Nhập số tiền (đ):</div>
+      <input type="number" id="quick-amount" class="text-input" placeholder="Nhập số tiền..." inputmode="numeric" style="font-size:22px;text-align:center;font-weight:800">
+      <button class="btn-submit" onclick="confirmQuickAdd()">💸 Lưu</button>
+    </div>
   </div>
 
   <!-- ADD MODAL -->

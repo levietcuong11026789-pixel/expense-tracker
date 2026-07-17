@@ -133,13 +133,27 @@ async function updateHeroTotals() {
 }
 
 // ── QUICK ADD ──────────────────────────────────
-async function quickAdd(icon, label, amount) {
-  const catId = CATEGORIES.find(c => c.icon === icon)?.id || 'other';
+let quickIcon = '', quickLabel = '';
+
+function openQuickAdd(icon, label) {
+  quickIcon = icon; quickLabel = label;
+  document.getElementById('quick-icon').textContent = icon;
+  document.getElementById('quick-label').textContent = label;
+  document.getElementById('quick-amount').value = '';
+  show('quick-modal');
+  setTimeout(() => document.getElementById('quick-amount').focus(), 300);
+}
+function closeQuickModal() { hide('quick-modal'); }
+
+async function confirmQuickAdd() {
+  const amount = parseInt(document.getElementById('quick-amount').value);
+  if (!amount || amount <= 0) { showToast('⚠️ Nhập số tiền!'); return; }
+  const catId = CATEGORIES.find(c => c.icon === quickIcon)?.id || 'other';
   await db.ref(`expenses/${todayKey()}`).push({
-    category: catId, amount, note: label, createdAt: Date.now()
+    category: catId, amount, note: quickLabel, createdAt: Date.now()
   });
-  playSound();
-  showToast(`💸 ${label}: −${fmtMoney(amount)}`);
+  closeQuickModal(); playSound();
+  showToast(`💸 ${quickLabel}: −${fmtMoney(amount)}`);
 }
 
 // ── ADD MODAL ──────────────────────────────────
