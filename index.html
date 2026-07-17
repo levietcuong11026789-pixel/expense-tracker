@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>💸 Sổ Chi Tiêu</title>
+  <meta name="description" content="Theo dõi chi tiêu hằng ngày, tuần, tháng">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="loading-screen">
+    <div class="loading-coin">💸</div>
+    <p>Đang kết nối...</p>
+  </div>
+
+  <div id="app" class="hidden">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="avatar">💰</div>
+        <div>
+          <div class="app-title">Sổ Chi Tiêu</div>
+          <div class="date-txt" id="date-display"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="top-btn" onclick="openStatsModal()">📊</button>
+        <button class="top-btn" onclick="openCalModal()">📅</button>
+      </div>
+    </div>
+
+    <!-- TODAY HERO -->
+    <div class="hero">
+      <div class="hero-ring">
+        <div class="hero-icon">💸</div>
+        <div class="hero-amount" id="today-total">0 đ</div>
+        <div class="hero-sub">Chi tiêu hôm nay</div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-pill">
+          <span>Tuần này</span>
+          <strong id="week-total" class="red-txt">0 đ</strong>
+        </div>
+        <div class="stat-pill">
+          <span>Tháng này</span>
+          <strong id="month-total" class="gold-txt">0 đ</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK ADD -->
+    <div class="section-block">
+      <div class="section-title">⚡ Thêm nhanh</div>
+      <div class="quick-grid">
+        <button class="quick-btn" onclick="quickAdd('🍜','Ăn sáng',25000)"><span>🍜</span>Ăn sáng<small>25k</small></button>
+        <button class="quick-btn" onclick="quickAdd('🍚','Ăn trưa',40000)"><span>🍚</span>Ăn trưa<small>40k</small></button>
+        <button class="quick-btn" onclick="quickAdd('🍲','Ăn tối',45000)"><span>🍲</span>Ăn tối<small>45k</small></button>
+        <button class="quick-btn" onclick="quickAdd('☕','Cà phê',20000)"><span>☕</span>Cà phê<small>20k</small></button>
+        <button class="quick-btn" onclick="quickAdd('⛽','Xăng',50000)"><span>⛽</span>Xăng<small>50k</small></button>
+        <button class="quick-btn" onclick="quickAdd('🛒','Đi chợ',100000)"><span>🛒</span>Đi chợ<small>100k</small></button>
+      </div>
+    </div>
+
+    <!-- ADD BUTTON -->
+    <div class="fab-wrap">
+      <button class="fab" onclick="openAddModal()">＋ Thêm chi tiêu</button>
+    </div>
+
+    <!-- TODAY LIST -->
+    <div class="section-block">
+      <div class="section-title">📋 Chi tiêu hôm nay</div>
+      <div id="today-list"><div class="empty-msg">Chưa có khoản chi nào hôm nay 🎉</div></div>
+    </div>
+
+  </div>
+
+  <!-- ADD MODAL -->
+  <div id="add-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeAddModal()"></div>
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeAddModal()">✕</button>
+      <h2>💸 Thêm chi tiêu</h2>
+
+      <div class="modal-label">Danh mục:</div>
+      <div class="cat-grid" id="cat-grid"></div>
+
+      <div class="modal-label">Số tiền (đ):</div>
+      <input type="number" id="add-amount" class="text-input" placeholder="50000" inputmode="numeric">
+
+      <div class="modal-label">Ghi chú (tùy chọn):</div>
+      <input type="text" id="add-note" class="text-input" placeholder="Vd: Phở bò, Grab, Tiền điện...">
+
+      <button class="btn-submit" onclick="submitExpense()">💾 Lưu chi tiêu</button>
+    </div>
+  </div>
+
+  <!-- STATS MODAL -->
+  <div id="stats-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeStatsModal()"></div>
+    <div class="modal-box stats-box">
+      <button class="modal-close" onclick="closeStatsModal()">✕</button>
+      <h2 style="margin-bottom:14px">📊 Thống kê</h2>
+
+      <div class="stats-tabs">
+        <button class="stab active" id="stab-day" onclick="switchTab('day')">📅 Ngày</button>
+        <button class="stab" id="stab-week" onclick="switchTab('week')">📆 Tuần</button>
+        <button class="stab" id="stab-month" onclick="switchTab('month')">🗓️ Tháng</button>
+        <button class="stab" id="stab-cat" onclick="switchTab('cat')">📂 Danh mục</button>
+      </div>
+
+      <!-- Day -->
+      <div id="spanel-day" class="spanel">
+        <div class="stat-hero" id="sd-total">0 đ</div>
+        <div class="stat-hero-sub">Tổng chi hôm nay</div>
+        <div id="sd-list" class="stat-list"></div>
+      </div>
+
+      <!-- Week -->
+      <div id="spanel-week" class="spanel hidden">
+        <div class="stat-hero" id="sw-total">0 đ</div>
+        <div class="stat-hero-sub">Tổng chi tuần này</div>
+        <div id="sw-list" class="stat-list"></div>
+        <div class="stat-best" id="sw-best"></div>
+      </div>
+
+      <!-- Month -->
+      <div id="spanel-month" class="spanel hidden">
+        <div class="stat-hero" id="sm-total">0 đ</div>
+        <div class="stat-hero-sub">Tổng chi tháng này</div>
+        <div class="stat-summary-row" id="sm-summary"></div>
+        <div id="sm-weeks" class="stat-list"></div>
+      </div>
+
+      <!-- Category -->
+      <div id="spanel-cat" class="spanel hidden">
+        <p class="stat-hero-sub" style="margin-bottom:12px">Top danh mục chi nhiều nhất tháng này</p>
+        <div id="sc-list" class="stat-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CALENDAR MODAL -->
+  <div id="cal-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeCalModal()"></div>
+    <div class="modal-box cal-box">
+      <button class="modal-close" onclick="closeCalModal()">✕</button>
+      <div class="cal-header">
+        <button class="cal-nav" onclick="calPrev()">◀</button>
+        <h2 id="cal-label">Tháng 7/2026</h2>
+        <button class="cal-nav" onclick="calNext()">▶</button>
+      </div>
+      <div class="cal-weekdays">
+        <span>CN</span><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div id="cal-detail" class="cal-detail hidden">
+        <div class="cal-detail-title" id="cal-detail-title"></div>
+        <div id="cal-detail-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT MODAL -->
+  <div id="edit-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeEditModal()"></div>
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+      <h2>✏️ Sửa chi tiêu</h2>
+      <div class="modal-label">Số tiền (đ):</div>
+      <input type="number" id="edit-amount" class="text-input" inputmode="numeric">
+      <div class="modal-label">Ghi chú:</div>
+      <input type="text" id="edit-note" class="text-input">
+      <button class="btn-submit" onclick="saveEdit()">💾 Lưu</button>
+      <button class="btn-delete" onclick="deleteExpense()">🗑️ Xóa khoản này</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
