@@ -1,10 +1,10 @@
 // =============================================
-// SỔ CHI TIÊU — app.js
+// SỔ CHI TIÊU — app.js (LOCAL STORAGE — BẢO MẬT)
+// Dữ liệu chỉ lưu trên máy, không gửi lên mạng
 // =============================================
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
-
 
 const CATEGORIES = [
   { id: 'food',      icon: '🍜', label: 'Ăn uống' },
@@ -21,7 +21,31 @@ const CATEGORIES = [
   { id: 'other',     icon: '📌', label: 'Khác' }
 ];
 
-let db, todayExpenses = {}, selectedCat = 'food', editingId = null;
+let selectedCat = 'food', editingId = null, editingDate = null;
+
+// ── LOCAL STORAGE HELPERS ──────────────────────
+function getExpenses(dateKey) {
+  const data = JSON.parse(localStorage.getItem('expenses') || '{}');
+  return data[dateKey] || {};
+}
+function getAllExpenses() {
+  return JSON.parse(localStorage.getItem('expenses') || '{}');
+}
+function saveExpense(dateKey, id, expense) {
+  const data = getAllExpenses();
+  if (!data[dateKey]) data[dateKey] = {};
+  data[dateKey][id] = expense;
+  localStorage.setItem('expenses', JSON.stringify(data));
+}
+function deleteExpenseData(dateKey, id) {
+  const data = getAllExpenses();
+  if (data[dateKey]) {
+    delete data[dateKey][id];
+    if (Object.keys(data[dateKey]).length === 0) delete data[dateKey];
+  }
+  localStorage.setItem('expenses', JSON.stringify(data));
+}
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
 // ── HELPERS ────────────────────────────────────
 function todayKey() {
@@ -41,34 +65,15 @@ function timeStr(ts) {
 
 // ── INIT ───────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  if (typeof firebaseConfig === 'undefined' || !firebaseConfig.apiKey) {
-    document.getElementById('loading-screen').innerHTML = '<p>⚠️ Thiếu firebase-config.js</p>';
-    return;
-  }
-  firebase.initializeApp(firebaseConfig);
-  db = firebase.database();
-  initApp();
-});
-
-function initApp() {
-  // Date display
   const now = new Date();
   const days = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
   document.getElementById('date-display').textContent =
     `${days[now.getDay()]}, ${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
-
-  // Build category grid in add-modal
   buildCatGrid();
-
-  // Real-time listener
-  db.ref(`expenses/${todayKey()}`).on('value', snap => {
-    todayExpenses = snap.val() || {};
-    renderToday();
-    updateHeroTotals();
-  });
-
+  renderToday();
+  updateHeroTotals();
   hide('loading-screen'); show('app');
-}
+});
 
 function buildCatGrid() {
   const el = document.getElementById('cat-grid');
@@ -78,7 +83,6 @@ function buildCatGrid() {
     </button>`
   ).join('');
 }
-
 function selectCat(id, el) {
   selectedCat = id;
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
@@ -87,6 +91,7 @@ function selectCat(id, el) {
 
 // ── RENDER TODAY ────────────────────────────────
 function renderToday() {
+  const todayExpenses = getExpenses(todayKey());
   const entries = Object.entries(todayExpenses)
     .map(([id, e]) => ({ id, ...e }))
     .sort((a, b) => b.createdAt - a.createdAt);
@@ -98,8 +103,8 @@ function renderToday() {
   }
 
   el.innerHTML = entries.map(e => {
-    const cat = CATEGORIES.find(c => c.id === e.category) || CATEGORIES[CATEGORIES.length-1];
-    return `<div class="expense-row" onclick="openEditModal('${e.id}')">
+    const cat = CATEGORIES.find(c => c.id === e.category) || CATEGORIES[11];
+    return `<div class="expense-row" onclick="openEditModal('${e.id}','${todayKey()}')">
       <div class="exp-icon">${cat.icon}</div>
       <div class="exp-info">
         <div class="exp-name">${e.note || cat.label}</div>
@@ -111,34 +116,37 @@ function renderToday() {
 }
 
 // ── HERO TOTALS ────────────────────────────────
-async function updateHeroTotals() {
+function updateHeroTotals() {
+  const allData = getAllExpenses();
+
   // Today
-  const todayTotal = Object.values(todayExpenses).reduce((s, e) => s + e.amount, 0);
+  const todayData = allData[todayKey()] || {};
+  const todayTotal = Object.values(todayData).reduce((s, e) => s + e.amount, 0);
   document.getElementById('today-total').textContent = fmtMoney(todayTotal);
 
   // Week
   const now = new Date();
   const dow = now.getDay();
   const monday = new Date(now); monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
-  const monKey = `${monday.getFullYear()}-${String(monday.getMonth()+1).padStart(2,'0')}-${String(monday.getDate()).padStart(2,'0')}`;
-  const weekSnap = await db.ref('expenses').orderByKey().startAt(monKey).endAt(todayKey() + '\uf8ff').get();
   let weekTotal = 0;
-  if (weekSnap.val()) Object.values(weekSnap.val()).forEach(day =>
-    Object.values(day).forEach(e => weekTotal += e.amount));
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday); d.setDate(monday.getDate() + i);
+    const dk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if (allData[dk]) Object.values(allData[dk]).forEach(e => weekTotal += e.amount);
+  }
   document.getElementById('week-total').textContent = fmtMoney(weekTotal);
 
   // Month
-  const monthSnap = await db.ref('expenses').orderByKey()
-    .startAt(monthPrefix()).endAt(monthPrefix() + '\uf8ff').get();
+  const prefix = monthPrefix();
   let monthTotal = 0;
-  if (monthSnap.val()) Object.values(monthSnap.val()).forEach(day =>
-    Object.values(day).forEach(e => monthTotal += e.amount));
+  Object.entries(allData).forEach(([dk, dayData]) => {
+    if (dk.startsWith(prefix)) Object.values(dayData).forEach(e => monthTotal += e.amount);
+  });
   document.getElementById('month-total').textContent = fmtMoney(monthTotal);
 }
 
 // ── QUICK ADD ──────────────────────────────────
 let quickIcon = '', quickLabel = '';
-
 function openQuickAdd(icon, label) {
   quickIcon = icon; quickLabel = label;
   document.getElementById('quick-icon').textContent = icon;
@@ -149,14 +157,14 @@ function openQuickAdd(icon, label) {
 }
 function closeQuickModal() { hide('quick-modal'); }
 
-async function confirmQuickAdd() {
+function confirmQuickAdd() {
   const amount = parseInt(document.getElementById('quick-amount').value);
   if (!amount || amount <= 0) { showToast('⚠️ Nhập số tiền!'); return; }
   const catId = CATEGORIES.find(c => c.icon === quickIcon)?.id || 'other';
-  await db.ref(`expenses/${todayKey()}`).push({
+  saveExpense(todayKey(), genId(), {
     category: catId, amount, note: quickLabel, createdAt: Date.now()
   });
-  closeQuickModal(); playSound();
+  closeQuickModal(); playSound(); renderToday(); updateHeroTotals();
   showToast(`💸 ${quickLabel}: −${fmtMoney(amount)}`);
 }
 
@@ -169,43 +177,45 @@ function openAddModal() {
 }
 function closeAddModal() { hide('add-modal'); }
 
-async function submitExpense() {
+function submitExpense() {
   const amount = parseInt(document.getElementById('add-amount').value);
   if (!amount || amount <= 0) { showToast('⚠️ Nhập số tiền!'); return; }
   const note = document.getElementById('add-note').value.trim();
   const cat = CATEGORIES.find(c => c.id === selectedCat);
-
-  await db.ref(`expenses/${todayKey()}`).push({
+  saveExpense(todayKey(), genId(), {
     category: selectedCat, amount, note: note || cat.label, createdAt: Date.now()
   });
-  closeAddModal(); playSound();
+  closeAddModal(); playSound(); renderToday(); updateHeroTotals();
   showToast(`💸 ${note || cat.label}: −${fmtMoney(amount)}`);
 }
 
 // ── EDIT MODAL ─────────────────────────────────
-function openEditModal(id) {
-  editingId = id;
-  const e = todayExpenses[id]; if (!e) return;
+function openEditModal(id, dateKey) {
+  editingId = id; editingDate = dateKey || todayKey();
+  const e = getExpenses(editingDate)[id]; if (!e) return;
   document.getElementById('edit-amount').value = e.amount;
   document.getElementById('edit-note').value = e.note || '';
   show('edit-modal');
 }
 function closeEditModal() { hide('edit-modal'); editingId = null; }
 
-async function saveEdit() {
+function saveEdit() {
   if (!editingId) return;
   const amount = parseInt(document.getElementById('edit-amount').value);
   if (!amount || amount <= 0) { showToast('⚠️ Nhập số tiền!'); return; }
   const note = document.getElementById('edit-note').value.trim();
-  await db.ref(`expenses/${todayKey()}/${editingId}`).update({ amount, note });
-  closeEditModal(); showToast('✅ Đã cập nhật!');
+  const existing = getExpenses(editingDate)[editingId];
+  saveExpense(editingDate, editingId, { ...existing, amount, note });
+  closeEditModal(); renderToday(); updateHeroTotals();
+  showToast('✅ Đã cập nhật!');
 }
 
-async function deleteExpense() {
+function deleteExpense() {
   if (!editingId) return;
   if (!confirm('Xóa khoản chi này?')) return;
-  await db.ref(`expenses/${todayKey()}/${editingId}`).remove();
-  closeEditModal(); showToast('🗑️ Đã xóa!');
+  deleteExpenseData(editingDate, editingId);
+  closeEditModal(); renderToday(); updateHeroTotals();
+  showToast('🗑️ Đã xóa!');
 }
 
 // ── STATS MODAL ────────────────────────────────
@@ -226,7 +236,7 @@ function switchTab(tab) {
 }
 
 function loadDayStats() {
-  const entries = Object.values(todayExpenses).sort((a,b) => b.amount - a.amount);
+  const entries = Object.values(getExpenses(todayKey())).sort((a,b) => b.amount - a.amount);
   const total = entries.reduce((s,e) => s+e.amount, 0);
   document.getElementById('sd-total').textContent = fmtMoney(total);
   if (!entries.length) {
@@ -242,7 +252,8 @@ function loadDayStats() {
   }).join('');
 }
 
-async function loadWeekStats() {
+function loadWeekStats() {
+  const allData = getAllExpenses();
   const now = new Date();
   const dow = now.getDay();
   const monday = new Date(now); monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
@@ -255,12 +266,10 @@ async function loadWeekStats() {
       label: `${dayNames[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}`, date: d
     });
   }
-  const snap = await db.ref('expenses').orderByKey().startAt(dayKeys[0].key).endAt(dayKeys[6].key+'\uf8ff').get();
-  const data = snap.val() || {};
 
   let weekTotal = 0, maxDay = '', maxVal = 0;
   const rows = dayKeys.map(({key, label, date}) => {
-    const dayData = data[key] || {};
+    const dayData = allData[key] || {};
     const val = Object.values(dayData).reduce((s,e) => s+e.amount, 0);
     const cnt = Object.keys(dayData).length;
     if (val > maxVal) { maxVal = val; maxDay = label; }
@@ -276,19 +285,18 @@ async function loadWeekStats() {
 
   document.getElementById('sw-total').textContent = fmtMoney(weekTotal);
   document.getElementById('sw-list').innerHTML = rows;
-  document.getElementById('sw-best').innerHTML = maxDay
+  document.getElementById('sw-best').innerHTML = maxDay && maxVal > 0
     ? `📛 <b>Ngày chi nhiều nhất:</b> ${maxDay} — <span class="red-txt fw">−${fmtMoney(maxVal)}</span>` : '';
 }
 
-async function loadMonthStats() {
+function loadMonthStats() {
+  const allData = getAllExpenses();
   const prefix = monthPrefix();
-  const snap = await db.ref('expenses').orderByKey().startAt(prefix).endAt(prefix+'\uf8ff').get();
-  const data = snap.val() || {};
-
   let monthTotal = 0, totalItems = 0, activeDays = 0;
   const weekMap = {};
 
-  Object.entries(data).forEach(([dateKey, dayData]) => {
+  Object.entries(allData).forEach(([dateKey, dayData]) => {
+    if (!dateKey.startsWith(prefix)) return;
     const entries = Object.values(dayData);
     const dayVal = entries.reduce((s,e) => s+e.amount, 0);
     totalItems += entries.length; activeDays++; monthTotal += dayVal;
@@ -307,13 +315,13 @@ async function loadMonthStats() {
   ).join('') || '<div class="empty-msg">Chưa có dữ liệu</div>';
 }
 
-async function loadCatStats() {
+function loadCatStats() {
+  const allData = getAllExpenses();
   const prefix = monthPrefix();
-  const snap = await db.ref('expenses').orderByKey().startAt(prefix).endAt(prefix+'\uf8ff').get();
-  const data = snap.val() || {};
   const catMap = {};
 
-  Object.values(data).forEach(dayData => {
+  Object.entries(allData).forEach(([dk, dayData]) => {
+    if (!dk.startsWith(prefix)) return;
     Object.values(dayData).forEach(e => {
       if (!catMap[e.category]) catMap[e.category] = { total: 0, count: 0 };
       catMap[e.category].total += e.amount;
@@ -357,15 +365,12 @@ function closeCalModal() { hide('cal-modal'); }
 function calPrev() { calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCal(); hide('cal-detail'); }
 function calNext() { calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCal(); hide('cal-detail'); }
 
-async function renderCal() {
+function renderCal() {
   const mNames = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6',
                    'Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
   document.getElementById('cal-label').textContent = `${mNames[calMonth]} / ${calYear}`;
 
-  const prefix = `${calYear}-${String(calMonth+1).padStart(2,'0')}`;
-  const snap = await db.ref('expenses').orderByKey().startAt(prefix).endAt(prefix+'\uf8ff').get();
-  const monthData = snap.val() || {};
-
+  const allData = getAllExpenses();
   const firstDay = new Date(calYear, calMonth, 1).getDay();
   const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
   const now = new Date();
@@ -376,7 +381,7 @@ async function renderCal() {
 
   for (let d = 1; d <= daysInMonth; d++) {
     const dk = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const dayData = monthData[dk] || null;
+    const dayData = allData[dk] || null;
     const isToday = dk === todayStr ? ' cal-today' : '';
     const isFuture = new Date(calYear, calMonth, d) > now;
     let amountHtml = '';
@@ -391,13 +396,12 @@ async function renderCal() {
   document.getElementById('cal-grid').innerHTML = html;
 }
 
-async function showCalDetail(dk) {
-  const snap = await db.ref(`expenses/${dk}`).get();
-  const data = snap.val() || {};
+function showCalDetail(dk) {
+  const dayData = getExpenses(dk);
   const [y,m,d] = dk.split('-');
   document.getElementById('cal-detail-title').textContent = `📋 Ngày ${parseInt(d)}/${parseInt(m)}`;
 
-  const entries = Object.values(data);
+  const entries = Object.values(dayData);
   if (!entries.length) {
     document.getElementById('cal-detail-list').innerHTML = '<div class="empty-msg">Không có chi tiêu</div>';
   } else {
