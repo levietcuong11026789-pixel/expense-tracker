@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>💸 Sổ Chi Tiêu</title>
-  <meta name="description" content="Theo dõi chi tiêu hằng ngày, tuần, tháng">
+  <meta name="description" content="Theo dõi chi tiêu và thu nhập hằng ngày">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Chi Tiêu">
@@ -19,7 +19,7 @@
 
   <div id="loading-screen">
     <div class="loading-coin">💸</div>
-    <p>Đang kết nối...</p>
+    <p>Đang tải...</p>
   </div>
 
   <div id="app" class="hidden">
@@ -34,52 +34,56 @@
         </div>
       </div>
       <div style="display:flex;gap:8px">
+        <button class="top-btn" onclick="openAiModal()">🤖</button>
         <button class="top-btn" onclick="openStatsModal()">📊</button>
         <button class="top-btn" onclick="openCalModal()">📅</button>
       </div>
     </div>
 
-    <!-- TODAY HERO -->
+    <!-- HERO: THU CHI -->
     <div class="hero">
-      <div class="hero-ring">
-        <div class="hero-icon">💸</div>
-        <div class="hero-amount" id="today-total">0 đ</div>
-        <div class="hero-sub">Chi tiêu hôm nay</div>
+      <div class="hero-cards">
+        <div class="hero-card red-card">
+          <div class="hc-label">💸 Chi tiêu</div>
+          <div class="hc-amount" id="hero-expense">0 đ</div>
+          <div class="hc-sub">Hôm nay</div>
+        </div>
+        <div class="hero-card green-card">
+          <div class="hc-label">💰 Thu nhập</div>
+          <div class="hc-amount" id="hero-income">0 đ</div>
+          <div class="hc-sub">Hôm nay</div>
+        </div>
+      </div>
+      <div class="balance-bar">
+        <span>📊 Số dư tháng:</span>
+        <strong id="hero-balance" class="green-txt">0 đ</strong>
       </div>
       <div class="stats-row">
-        <div class="stat-pill">
-          <span>Tuần này</span>
-          <strong id="week-total" class="red-txt">0 đ</strong>
-        </div>
-        <div class="stat-pill">
-          <span>Tháng này</span>
-          <strong id="month-total" class="gold-txt">0 đ</strong>
-        </div>
+        <div class="stat-pill"><span>Tuần</span><strong id="week-expense" class="red-txt">0đ</strong></div>
+        <div class="stat-pill"><span>Tuần thu</span><strong id="week-income" class="green-txt">0đ</strong></div>
+        <div class="stat-pill"><span>Tháng chi</span><strong id="month-expense" class="gold-txt">0đ</strong></div>
       </div>
     </div>
 
     <!-- QUICK ADD -->
     <div class="section-block">
-      <div class="section-title">⚡ Thêm nhanh</div>
-      <div class="quick-grid">
-        <button class="quick-btn" onclick="openQuickAdd('🍜','Ăn sáng')"><span>🍜</span>Ăn sáng</button>
-        <button class="quick-btn" onclick="openQuickAdd('🍚','Ăn trưa')"><span>🍚</span>Ăn trưa</button>
-        <button class="quick-btn" onclick="openQuickAdd('🍲','Ăn tối')"><span>🍲</span>Ăn tối</button>
-        <button class="quick-btn" onclick="openQuickAdd('☕','Cà phê')"><span>☕</span>Cà phê</button>
-        <button class="quick-btn" onclick="openQuickAdd('⛽','Xăng')"><span>⛽</span>Xăng</button>
-        <button class="quick-btn" onclick="openQuickAdd('🛒','Đi chợ')"><span>🛒</span>Đi chợ</button>
+      <div class="section-title">
+        ⚡ Thêm nhanh
+        <button class="edit-quick-btn" onclick="openQuickSettings()">✏️</button>
       </div>
+      <div class="quick-grid" id="quick-grid"></div>
     </div>
 
-    <!-- ADD BUTTON -->
+    <!-- ACTION BUTTONS -->
     <div class="fab-wrap">
-      <button class="fab" onclick="openAddModal()">＋ Thêm chi tiêu</button>
+      <button class="fab fab-red" onclick="openAddModal('expense')">＋ Thêm chi tiêu</button>
+      <button class="fab fab-green" onclick="openAddModal('income')">＋ Thêm thu nhập</button>
     </div>
 
     <!-- TODAY LIST -->
     <div class="section-block">
-      <div class="section-title">📋 Chi tiêu hôm nay</div>
-      <div id="today-list"><div class="empty-msg">Chưa có khoản chi nào hôm nay 🎉</div></div>
+      <div class="section-title">📋 Hôm nay</div>
+      <div id="today-list"><div class="empty-msg">Chưa có giao dịch nào 🎉</div></div>
     </div>
 
   </div>
@@ -89,7 +93,7 @@
     <div class="modal-backdrop" onclick="closeQuickModal()"></div>
     <div class="modal-box">
       <button class="modal-close" onclick="closeQuickModal()">✕</button>
-      <div class="modal-icon" id="quick-icon" style="font-size:48px;margin-bottom:8px">🍜</div>
+      <div id="quick-icon" style="font-size:48px;margin-bottom:8px">🍜</div>
       <h2 id="quick-label">Ăn sáng</h2>
       <div class="modal-label">Nhập số tiền (đ):</div>
       <input type="number" id="quick-amount" class="text-input" placeholder="Nhập số tiền..." inputmode="numeric" style="font-size:22px;text-align:center;font-weight:800">
@@ -97,23 +101,51 @@
     </div>
   </div>
 
-  <!-- ADD MODAL -->
+  <!-- ADD MODAL (expense/income) -->
   <div id="add-modal" class="modal hidden">
     <div class="modal-backdrop" onclick="closeAddModal()"></div>
     <div class="modal-box">
       <button class="modal-close" onclick="closeAddModal()">✕</button>
-      <h2>💸 Thêm chi tiêu</h2>
-
+      <h2 id="add-title">💸 Thêm chi tiêu</h2>
       <div class="modal-label">Danh mục:</div>
       <div class="cat-grid" id="cat-grid"></div>
-
       <div class="modal-label">Số tiền (đ):</div>
       <input type="number" id="add-amount" class="text-input" placeholder="50000" inputmode="numeric">
-
       <div class="modal-label">Ghi chú (tùy chọn):</div>
-      <input type="text" id="add-note" class="text-input" placeholder="Vd: Phở bò, Grab, Tiền điện...">
+      <input type="text" id="add-note" class="text-input" placeholder="Ghi chú...">
+      <button class="btn-submit" id="add-submit-btn" onclick="submitEntry()">💾 Lưu</button>
+    </div>
+  </div>
 
-      <button class="btn-submit" onclick="submitExpense()">💾 Lưu chi tiêu</button>
+  <!-- EDIT MODAL -->
+  <div id="edit-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeEditModal()"></div>
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+      <h2>✏️ Sửa giao dịch</h2>
+      <div class="modal-label">Số tiền (đ):</div>
+      <input type="number" id="edit-amount" class="text-input" inputmode="numeric">
+      <div class="modal-label">Ghi chú:</div>
+      <input type="text" id="edit-note" class="text-input">
+      <button class="btn-submit" onclick="saveEdit()">💾 Lưu</button>
+      <button class="btn-delete" onclick="deleteEntry()">🗑️ Xóa</button>
+    </div>
+  </div>
+
+  <!-- QUICK SETTINGS MODAL -->
+  <div id="quick-settings-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeQuickSettings()"></div>
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeQuickSettings()">✕</button>
+      <h2>⚙️ Tùy chỉnh nút nhanh</h2>
+      <p class="dim" style="font-size:13px;margin-bottom:14px">Kéo để đổi thứ tự · Bật/tắt từng mục</p>
+      <div id="quick-config-list"></div>
+      <div class="qs-add-row">
+        <input type="text" id="qs-new-icon" class="text-input" placeholder="Icon (emoji)" style="width:60px;text-align:center">
+        <input type="text" id="qs-new-label" class="text-input" placeholder="Tên mục" style="flex:1">
+        <button class="btn-small green-btn" onclick="addCustomQuick()">＋</button>
+      </div>
+      <button class="btn-submit" onclick="saveQuickSettings()">💾 Lưu cài đặt</button>
     </div>
   </div>
 
@@ -123,42 +155,18 @@
     <div class="modal-box stats-box">
       <button class="modal-close" onclick="closeStatsModal()">✕</button>
       <h2 style="margin-bottom:14px">📊 Thống kê</h2>
-
       <div class="stats-tabs">
         <button class="stab active" id="stab-day" onclick="switchTab('day')">📅 Ngày</button>
         <button class="stab" id="stab-week" onclick="switchTab('week')">📆 Tuần</button>
         <button class="stab" id="stab-month" onclick="switchTab('month')">🗓️ Tháng</button>
+        <button class="stab" id="stab-compare" onclick="switchTab('compare')">⚖️ Thu/Chi</button>
         <button class="stab" id="stab-cat" onclick="switchTab('cat')">📂 Danh mục</button>
       </div>
-
-      <!-- Day -->
-      <div id="spanel-day" class="spanel">
-        <div class="stat-hero" id="sd-total">0 đ</div>
-        <div class="stat-hero-sub">Tổng chi hôm nay</div>
-        <div id="sd-list" class="stat-list"></div>
-      </div>
-
-      <!-- Week -->
-      <div id="spanel-week" class="spanel hidden">
-        <div class="stat-hero" id="sw-total">0 đ</div>
-        <div class="stat-hero-sub">Tổng chi tuần này</div>
-        <div id="sw-list" class="stat-list"></div>
-        <div class="stat-best" id="sw-best"></div>
-      </div>
-
-      <!-- Month -->
-      <div id="spanel-month" class="spanel hidden">
-        <div class="stat-hero" id="sm-total">0 đ</div>
-        <div class="stat-hero-sub">Tổng chi tháng này</div>
-        <div class="stat-summary-row" id="sm-summary"></div>
-        <div id="sm-weeks" class="stat-list"></div>
-      </div>
-
-      <!-- Category -->
-      <div id="spanel-cat" class="spanel hidden">
-        <p class="stat-hero-sub" style="margin-bottom:12px">Top danh mục chi nhiều nhất tháng này</p>
-        <div id="sc-list" class="stat-list"></div>
-      </div>
+      <div id="spanel-day" class="spanel"><div class="stat-hero" id="sd-total">0 đ</div><div class="stat-hero-sub">Tổng chi hôm nay</div><div id="sd-list" class="stat-list"></div></div>
+      <div id="spanel-week" class="spanel hidden"><div class="stat-hero" id="sw-total">0 đ</div><div class="stat-hero-sub">Tổng chi tuần này</div><div id="sw-list" class="stat-list"></div><div class="stat-best" id="sw-best"></div></div>
+      <div id="spanel-month" class="spanel hidden"><div class="stat-hero" id="sm-total">0 đ</div><div class="stat-hero-sub">Tổng chi tháng này</div><div class="stat-summary-row" id="sm-summary"></div><div id="sm-weeks" class="stat-list"></div></div>
+      <div id="spanel-compare" class="spanel hidden"><div id="sc-compare"></div></div>
+      <div id="spanel-cat" class="spanel hidden"><p class="stat-hero-sub" style="margin-bottom:12px">Top danh mục chi nhiều nhất</p><div id="sc-cat-list" class="stat-list"></div></div>
     </div>
   </div>
 
@@ -169,12 +177,10 @@
       <button class="modal-close" onclick="closeCalModal()">✕</button>
       <div class="cal-header">
         <button class="cal-nav" onclick="calPrev()">◀</button>
-        <h2 id="cal-label">Tháng 7/2026</h2>
+        <h2 id="cal-label"></h2>
         <button class="cal-nav" onclick="calNext()">▶</button>
       </div>
-      <div class="cal-weekdays">
-        <span>CN</span><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span>
-      </div>
+      <div class="cal-weekdays"><span>CN</span><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span></div>
       <div class="cal-grid" id="cal-grid"></div>
       <div id="cal-detail" class="cal-detail hidden">
         <div class="cal-detail-title" id="cal-detail-title"></div>
@@ -183,18 +189,15 @@
     </div>
   </div>
 
-  <!-- EDIT MODAL -->
-  <div id="edit-modal" class="modal hidden">
-    <div class="modal-backdrop" onclick="closeEditModal()"></div>
-    <div class="modal-box">
-      <button class="modal-close" onclick="closeEditModal()">✕</button>
-      <h2>✏️ Sửa chi tiêu</h2>
-      <div class="modal-label">Số tiền (đ):</div>
-      <input type="number" id="edit-amount" class="text-input" inputmode="numeric">
-      <div class="modal-label">Ghi chú:</div>
-      <input type="text" id="edit-note" class="text-input">
-      <button class="btn-submit" onclick="saveEdit()">💾 Lưu</button>
-      <button class="btn-delete" onclick="deleteExpense()">🗑️ Xóa khoản này</button>
+  <!-- AI ADVISOR MODAL -->
+  <div id="ai-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeAiModal()"></div>
+    <div class="modal-box ai-box">
+      <button class="modal-close" onclick="closeAiModal()">✕</button>
+      <h2>🤖 Tư vấn tài chính</h2>
+      <p class="dim" style="font-size:13px;margin:8px 0 14px">Phân tích dữ liệu chi tiêu & thu nhập của bạn</p>
+      <div id="ai-content" class="ai-content"></div>
+      <button class="btn-submit" onclick="runAiAnalysis()" style="margin-top:12px">🔄 Phân tích lại</button>
     </div>
   </div>
 
