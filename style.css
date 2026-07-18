@@ -143,3 +143,7 @@ html,body{min-height:100%;font-family:'Nunito',sans-serif;background:linear-grad
 .ai-key-row{display:flex;gap:8px;margin:10px 0;align-items:center}
 .ai-key-row input{flex:1;font-size:12px}
 .ai-key-btn{padding:10px 14px;border-radius:var(--r-sm);background:var(--green);border:none;color:#fff;font-weight:700;cursor:pointer;font-size:12px;font-family:inherit}
+
+.ai-provider-tabs{display:flex;gap:6px;margin:10px 0 12px}
+.ai-ptab{flex:1;padding:8px 10px;border-radius:50px;background:var(--glass);border:1px solid var(--glass-b);color:var(--text-dim);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+.ai-ptab.active{background:rgba(96,165,250,.25);border-color:var(--primary);color:var(--primary)}

@@ -97,6 +97,8 @@
       <h2 id="quick-label">Ăn sáng</h2>
       <div class="modal-label">Nhập số tiền (đ):</div>
       <input type="number" id="quick-amount" class="text-input" placeholder="Nhập số tiền..." inputmode="numeric" style="font-size:22px;text-align:center;font-weight:800">
+      <div class="modal-label">Mua gì / Chi gì:</div>
+      <input type="text" id="quick-note" class="text-input" placeholder="Vd: Phở bò, Grab đi làm...">
       <button class="btn-submit" onclick="confirmQuickAdd()">💸 Lưu</button>
     </div>
   </div>
@@ -194,17 +196,22 @@
     <div class="modal-backdrop" onclick="closeAiModal()"></div>
     <div class="modal-box ai-box">
       <button class="modal-close" onclick="closeAiModal()">✕</button>
-      <h2>🤖 Tư vấn tài chính</h2>
-      <div class="ai-key-row">
-        <input type="password" id="gemini-key" class="text-input" placeholder="Gemini API Key (tùy chọn)">
-        <button class="ai-key-btn" onclick="saveGeminiKey()">💾</button>
+      <h2>🤖 Tư vấn tài chính AI</h2>
+      <div class="ai-provider-tabs">
+        <button class="ai-ptab active" id="ptab-gemini" onclick="selectProvider('gemini')">✨ Gemini</button>
+        <button class="ai-ptab" id="ptab-gpt" onclick="selectProvider('gpt')">🧠 GPT</button>
+        <button class="ai-ptab" id="ptab-claude" onclick="selectProvider('claude')">🟠 Claude</button>
       </div>
-      <p class="dim" style="font-size:11px;margin-bottom:10px">Lấy key tại <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--primary)">aistudio.google.com</a></p>
+      <div class="ai-key-row">
+        <input type="password" id="ai-api-key" class="text-input" placeholder="Nhập API Key...">
+        <button class="ai-key-btn" onclick="saveAiKey()">💾</button>
+      </div>
+      <p class="dim" style="font-size:11px;margin-bottom:10px" id="ai-key-hint">Lấy key tại <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--primary)">aistudio.google.com</a></p>
       <div id="ai-content" class="ai-content"></div>
-      <div id="ai-gemini-reply"></div>
+      <div id="ai-reply"></div>
       <div class="ai-chat-input">
-        <input type="text" id="ai-question" class="text-input" placeholder="Hỏi AI về tài chính...">
-        <button class="ai-chat-send" onclick="askGemini()">🚀</button>
+        <input type="text" id="ai-question" class="text-input" placeholder="Hỏi AI về tài chính..." onkeydown="if(event.key==='Enter')askAi()">
+        <button class="ai-chat-send" onclick="askAi()">🚀</button>
       </div>
       <button class="btn-submit" onclick="runAiAnalysis()" style="margin-top:12px">🔄 Phân tích lại</button>
     </div>
