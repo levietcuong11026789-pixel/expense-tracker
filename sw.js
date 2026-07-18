@@ -1,10 +1,9 @@
-const CACHE_NAME = 'expense-v1';
+const CACHE_NAME = 'expense-v2';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './app.js',
-  './firebase-config.js',
   './manifest.json'
 ];
 
@@ -25,12 +24,7 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Network first for Firebase API calls, cache first for static assets
-  if (e.request.url.includes('firebasedatabase') || e.request.url.includes('googleapis')) {
-    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
-  } else {
-    e.respondWith(
-      caches.match(e.request).then(cached => cached || fetch(e.request))
-    );
-  }
+  e.respondWith(
+    fetch(e.request).catch(() => caches.match(e.request))
+  );
 });
