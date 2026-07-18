@@ -1,6 +1,10 @@
 // =============================================
 // SỔ CHI TIÊU — app.js
 // =============================================
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
 
 const CATEGORIES = [
   { id: 'food',      icon: '🍜', label: 'Ăn uống' },
