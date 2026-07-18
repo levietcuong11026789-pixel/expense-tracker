@@ -195,8 +195,17 @@
     <div class="modal-box ai-box">
       <button class="modal-close" onclick="closeAiModal()">✕</button>
       <h2>🤖 Tư vấn tài chính</h2>
-      <p class="dim" style="font-size:13px;margin:8px 0 14px">Phân tích dữ liệu chi tiêu & thu nhập của bạn</p>
+      <div class="ai-key-row">
+        <input type="password" id="gemini-key" class="text-input" placeholder="Gemini API Key (tùy chọn)">
+        <button class="ai-key-btn" onclick="saveGeminiKey()">💾</button>
+      </div>
+      <p class="dim" style="font-size:11px;margin-bottom:10px">Lấy key tại <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--primary)">aistudio.google.com</a></p>
       <div id="ai-content" class="ai-content"></div>
+      <div id="ai-gemini-reply"></div>
+      <div class="ai-chat-input">
+        <input type="text" id="ai-question" class="text-input" placeholder="Hỏi AI về tài chính...">
+        <button class="ai-chat-send" onclick="askGemini()">🚀</button>
+      </div>
       <button class="btn-submit" onclick="runAiAnalysis()" style="margin-top:12px">🔄 Phân tích lại</button>
     </div>
   </div>

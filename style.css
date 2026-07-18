@@ -130,3 +130,16 @@ html,body{min-height:100%;font-family:'Nunito',sans-serif;background:linear-grad
 .ai-tip{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:10px;margin-bottom:6px;font-size:13px}
 .fw{font-weight:800}.dim{color:var(--text-dim)}
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--glass-b);border-radius:4px}
+
+.qs-label{font-size:13px;color:var(--text-dim);margin:14px 0 8px;text-align:left;font-weight:700}
+.qs-pick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.qs-pick-btn{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--glass);border:1px solid var(--glass-b);border-radius:var(--r-sm);padding:10px 4px;color:var(--text);cursor:pointer;font-family:inherit;font-size:20px;transition:all .15s}
+.qs-pick-btn:hover{background:rgba(96,165,250,.15);border-color:var(--primary)}
+.qs-pick-btn small{font-size:10px;color:var(--text-dim)}
+.ai-chat-input{display:flex;gap:8px;margin-top:12px}
+.ai-chat-input input{flex:1}
+.ai-chat-send{padding:12px 18px;border-radius:var(--r-sm);background:var(--primary);border:none;color:#fff;font-weight:800;cursor:pointer;font-family:inherit}
+.ai-gemini-msg{background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:var(--r-sm);padding:14px;margin-top:10px;font-size:13px;text-align:left;line-height:1.6;white-space:pre-wrap}
+.ai-key-row{display:flex;gap:8px;margin:10px 0;align-items:center}
+.ai-key-row input{flex:1;font-size:12px}
+.ai-key-btn{padding:10px 14px;border-radius:var(--r-sm);background:var(--green);border:none;color:#fff;font-weight:700;cursor:pointer;font-size:12px;font-family:inherit}

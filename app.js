@@ -35,11 +35,16 @@ function closeEditModal(){hide('edit-modal');editId=null}
 function saveEdit(){if(!editId)return;const a=parseInt(document.getElementById('edit-amount').value);if(!a||a<=0){toast('⚠️ Nhập số tiền!');return}const n=document.getElementById('edit-note').value.trim();const store=editType==='expense'?'expenses':'income';const ex=gd(editDate,store)[editId];sv(editDate,editId,{...ex,amount:a,note:n},store);closeEditModal();renderToday();updateHero();toast('✅ Đã cập nhật!')}
 function deleteEntry(){if(!editId||!confirm('Xóa giao dịch này?'))return;dl(editDate,editId,editType==='expense'?'expenses':'income');closeEditModal();renderToday();updateHero();toast('🗑️ Đã xóa!')}
 
-// QUICK SETTINGS
-let tmpQuick=[];
+
+// QUICK SETTINGS - pick from ALL categories
 function openQuickSettings(){tmpQuick=JSON.parse(JSON.stringify(gq()));renderQConfig();show('quick-settings-modal')}
-function closeQuickSettings(){hide('quick-settings-modal')}
-function renderQConfig(){document.getElementById('quick-config-list').innerHTML=tmpQuick.map((b,i)=>`<div class="qs-row"><span class="qs-drag">${b.icon} ${b.label}</span><div class="qs-btns"><button class="qs-btn" onclick="moveQ(${i},-1)">▲</button><button class="qs-btn" onclick="moveQ(${i},1)">▼</button><button class="qs-btn ${b.on!==false?'qs-on':'qs-off'}" onclick="toggleQ(${i})">${b.on!==false?'✅':'❌'}</button><button class="qs-btn qs-del" onclick="delQ(${i})">🗑️</button></div></div>`).join('')}
+function renderQConfig(){
+const allCats=[...CATS,...ICATS];
+const avail=allCats.filter(c=>!tmpQuick.find(q=>q.icon===c.icon&&q.label===c.label));
+let h=tmpQuick.map((b,i)=>`<div class="qs-row"><span class="qs-drag">${b.icon} ${b.label}</span><div class="qs-btns"><button class="qs-btn" onclick="moveQ(${i},-1)">▲</button><button class="qs-btn" onclick="moveQ(${i},1)">▼</button><button class="qs-btn ${b.on!==false?'qs-on':'qs-off'}" onclick="toggleQ(${i})">${b.on!==false?'✅':'❌'}</button><button class="qs-btn qs-del" onclick="delQ(${i})">🗑️</button></div></div>`).join('');
+if(avail.length){h+=`<div class="qs-label">Thêm từ danh mục:</div><div class="qs-pick-grid">${avail.map(c=>`<button class="qs-pick-btn" onclick="pickQuick('${c.icon}','${c.label}')">${c.icon}<br><small>${c.label}</small></button>`).join('')}</div>`}
+document.getElementById('quick-config-list').innerHTML=h}
+function pickQuick(icon,label){tmpQuick.push({icon,label,on:true});renderQConfig()}
 function moveQ(i,d){const j=i+d;if(j<0||j>=tmpQuick.length)return;[tmpQuick[i],tmpQuick[j]]=[tmpQuick[j],tmpQuick[i]];renderQConfig()}
 function toggleQ(i){tmpQuick[i].on=tmpQuick[i].on===false?true:false;renderQConfig()}
 function delQ(i){tmpQuick.splice(i,1);renderQConfig()}
@@ -95,3 +100,10 @@ document.getElementById('ai-content').innerHTML=`
 ${mInc>0?`<div class="ai-stat">Tỷ lệ tiết kiệm: <b class="${rate>=20?'green-txt':'red-txt'}">${rate}%</b></div>`:''}
 ${prevExp>0?`<div class="ai-stat">So tháng trước: <b class="${change<=0?'green-txt':'red-txt'}">${change>=0?'+':''}${change}%</b></div>`:''}</div>
 <div class="ai-section"><div class="ai-title">💡 Lời khuyên</div>${tips.map(t=>`<div class="ai-tip">${t}</div>`).join('')}</div>`}
+
+
+// GEMINI AI
+function saveGeminiKey(){const k=document.getElementById('gemini-key').value.trim();if(k){localStorage.setItem('geminiKey',k);toast('✅ Đã lưu API Key!')}else{localStorage.removeItem('geminiKey');toast('🗑️ Đã xóa API Key')}}
+function openAiModal(){const k=localStorage.getItem('geminiKey');if(k)document.getElementById('gemini-key').value=k;runAiAnalysis();show('ai-modal')}
+function buildFinanceContext(){const ex=ga('expenses'),ic=ga('income'),pf=mp();let mExp=0,mInc=0,cats={};Object.entries(ex).forEach(([k,v])=>{if(k.startsWith(pf))Object.values(v).forEach(e=>{mExp+=e.amount;cats[e.category]=(cats[e.category]||0)+e.amount})});Object.entries(ic).forEach(([k,v])=>{if(k.startsWith(pf))Object.values(v).forEach(e=>mInc+=e.amount)});const top=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([id,v])=>{const c=CATS.find(x=>x.id===id)||{label:'Khác'};return `${c.label}: ${fm(v)}`}).join(', ');return `Thu nhập tháng: ${fm(mInc)}. Chi tiêu tháng: ${fm(mExp)}. Số dư: ${fm(mInc-mExp)}. Top chi tiêu: ${top}.`}
+async function askGemini(){const q=document.getElementById('ai-question').value.trim();if(!q){toast('⚠️ Nhập câu hỏi!');return}const key=localStorage.getItem('geminiKey');if(!key){toast('⚠️ Cần nhập Gemini API Key!');return}const el=document.getElementById('ai-gemini-reply');el.innerHTML='<div class="ai-gemini-msg">⏳ Đang hỏi AI...</div>';const ctx=buildFinanceContext();try{const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:`Bạn là chuyên gia tư vấn tài chính cá nhân. Dữ liệu: ${ctx}\n\nCâu hỏi: ${q}\n\nTrả lời ngắn gọn bằng tiếng Việt, thực tế và hữu ích.`}]}]})});const d=await r.json();const txt=d.candidates?.[0]?.content?.parts?.[0]?.text||'Không nhận được phản hồi.';el.innerHTML=`<div class="ai-gemini-msg">🤖 <b>Gemini:</b>\n${txt}</div>`}catch(e){el.innerHTML=`<div class="ai-gemini-msg" style="border-color:var(--red)">❌ Lỗi: ${e.message}</div>`}document.getElementById('ai-question').value=''}
