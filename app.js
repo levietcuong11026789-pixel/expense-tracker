@@ -118,34 +118,80 @@ function buildFullCtx(){const ex=ga('expenses'),ic=ga('income'),pf=mp();let mE=0
 function copyContext(){const txt=buildFullCtx();navigator.clipboard.writeText(txt).then(()=>{snd();toast('📋 Đã copy dữ liệu! Dán vào AI chat.')}).catch(()=>toast('❌ Không copy được'))}
 function openAiWeb(p){const txt=buildFullCtx();navigator.clipboard.writeText(txt).then(()=>{snd();toast('📋 Đã copy! Dán vào chat AI.')}).catch(()=>{});const urls={gemini:'https://gemini.google.com/',gpt:'https://chat.openai.com/',claude:'https://claude.ai/'};window.open(urls[p],'_blank')}
 
-// DRAG & DROP SYSTEM
-let dragSrcIdx=null,dragFromPick=null;
-function initDrag(){
-const list=document.getElementById('quick-config-list');if(!list)return;
-// List items drag
-list.querySelectorAll('.qs-row').forEach((r,i)=>{r.setAttribute('draggable','true');r.dataset.idx=i;
-r.addEventListener('dragstart',e=>{dragSrcIdx=i;dragFromPick=null;r.style.opacity='0.4';e.dataTransfer.effectAllowed='move'});
-r.addEventListener('dragend',()=>{r.style.opacity='1';dragSrcIdx=null;list.querySelectorAll('.qs-row').forEach(x=>x.classList.remove('qs-drag-over'))});
-r.addEventListener('dragover',e=>{e.preventDefault();r.classList.add('qs-drag-over')});
-r.addEventListener('dragleave',()=>r.classList.remove('qs-drag-over'));
-r.addEventListener('drop',e=>{e.preventDefault();r.classList.remove('qs-drag-over');const to=parseInt(r.dataset.idx);
-if(dragFromPick){tmpQuick.splice(to,0,{icon:dragFromPick.icon,label:dragFromPick.label,on:true});dragFromPick=null;renderQConfig();return}
-if(dragSrcIdx!==null&&dragSrcIdx!==to){const item=tmpQuick.splice(dragSrcIdx,1)[0];tmpQuick.splice(to,0,item);renderQConfig()}})});
-// Picker items drag
-list.querySelectorAll('.qs-pick-btn').forEach(b=>{b.setAttribute('draggable','true');
-b.addEventListener('dragstart',e=>{dragFromPick={icon:b.dataset.icon,label:b.dataset.label};b.style.opacity='0.4';e.dataTransfer.effectAllowed='copy'});
-b.addEventListener('dragend',()=>{b.style.opacity='1';dragFromPick=null})})}
-const origRQ=renderQConfig;
-renderQConfig=function(){origRQ();setTimeout(initDrag,50)}
-// HOME SCREEN quick buttons drag
-let homeIdx=null;
-function initHomeDrag(){const grid=document.getElementById('quick-grid');if(!grid)return;const btns=grid.querySelectorAll('.quick-btn');
-btns.forEach((b,i)=>{b.setAttribute('draggable','true');b.dataset.idx=i;
-b.addEventListener('dragstart',e=>{homeIdx=i;b.style.opacity='0.4';e.dataTransfer.effectAllowed='move'});
-b.addEventListener('dragend',()=>{b.style.opacity='1';homeIdx=null;grid.querySelectorAll('.quick-btn').forEach(x=>x.classList.remove('qs-drag-over'))});
-b.addEventListener('dragover',e=>{e.preventDefault();b.classList.add('qs-drag-over')});
-b.addEventListener('dragleave',()=>b.classList.remove('qs-drag-over'));
-b.addEventListener('drop',e=>{e.preventDefault();b.classList.remove('qs-drag-over');const to=parseInt(b.dataset.idx);
-if(homeIdx!==null&&homeIdx!==to){const q=gq();const item=q.splice(homeIdx,1)[0];q.splice(to,0,item);sq(q);renderQuick();snd()}})})}
-const origRQuick=renderQuick;
-renderQuick=function(){origRQuick();setTimeout(initHomeDrag,50)}
+// TOUCH DRAG SYSTEM (works on iPhone + desktop)
+function makeSortable(container, items, onReorder) {
+  let srcIdx = null, clone = null, startY = 0, longPress = null;
+  items.forEach((el, i) => {
+    el.dataset.idx = i;
+    // Desktop drag
+    el.setAttribute('draggable', 'true');
+    el.addEventListener('dragstart', e => { srcIdx = i; el.style.opacity = '0.4'; });
+    el.addEventListener('dragend', () => { el.style.opacity = '1'; srcIdx = null; items.forEach(x => x.classList.remove('qs-drag-over')); });
+    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('qs-drag-over'); });
+    el.addEventListener('dragleave', () => el.classList.remove('qs-drag-over'));
+    el.addEventListener('drop', e => { e.preventDefault(); el.classList.remove('qs-drag-over'); if (srcIdx !== null && srcIdx !== i) onReorder(srcIdx, i); });
+    // Mobile touch
+    el.addEventListener('touchstart', e => {
+      startY = e.touches[0].clientY;
+      longPress = setTimeout(() => {
+        srcIdx = i; el.style.opacity = '0.4'; el.style.background = 'rgba(96,165,250,0.2)';
+        snd();
+      }, 400);
+    }, { passive: true });
+    el.addEventListener('touchmove', e => {
+      if (Math.abs(e.touches[0].clientY - startY) > 10 && longPress) { clearTimeout(longPress); longPress = null; }
+      if (srcIdx === null) return;
+      e.preventDefault();
+      const t = e.touches[0];
+      items.forEach(x => x.classList.remove('qs-drag-over'));
+      const target = document.elementFromPoint(t.clientX, t.clientY);
+      if (target) { const row = target.closest('[data-idx]'); if (row) row.classList.add('qs-drag-over'); }
+    }, { passive: false });
+    el.addEventListener('touchend', e => {
+      clearTimeout(longPress); longPress = null;
+      el.style.opacity = '1'; el.style.background = '';
+      if (srcIdx === null) return;
+      const t = e.changedTouches[0];
+      const target = document.elementFromPoint(t.clientX, t.clientY);
+      items.forEach(x => x.classList.remove('qs-drag-over'));
+      if (target) {
+        const row = target.closest('[data-idx]');
+        if (row) { const to = parseInt(row.dataset.idx); if (srcIdx !== to) onReorder(srcIdx, to); }
+      }
+      srcIdx = null;
+    });
+  });
+}
+
+function initDrag() {
+  const list = document.getElementById('quick-config-list'); if (!list) return;
+  const rows = Array.from(list.querySelectorAll('.qs-row'));
+  if (rows.length) makeSortable(list, rows, (from, to) => {
+    const item = tmpQuick.splice(from, 1)[0]; tmpQuick.splice(to, 0, item); renderQConfig();
+  });
+  // Picker: tap to add (touch drag from picker to list is unreliable on mobile)
+  list.querySelectorAll('.qs-pick-btn').forEach(b => {
+    b.setAttribute('draggable', 'true');
+    b.addEventListener('dragstart', e => { b._drag = { icon: b.dataset.icon, label: b.dataset.label }; b.style.opacity = '0.4'; });
+    b.addEventListener('dragend', () => { b.style.opacity = '1'; });
+  });
+  rows.forEach(r => {
+    r.addEventListener('drop', e => {
+      const picks = list.querySelectorAll('.qs-pick-btn');
+      picks.forEach(p => { if (p._drag) { const to = parseInt(r.dataset.idx); tmpQuick.splice(to, 0, { icon: p._drag.icon, label: p._drag.label, on: true }); p._drag = null; renderQConfig(); } });
+    });
+  });
+}
+const origRQ = renderQConfig;
+renderQConfig = function() { origRQ(); setTimeout(initDrag, 50); };
+
+function initHomeDrag() {
+  const grid = document.getElementById('quick-grid'); if (!grid) return;
+  const btns = Array.from(grid.querySelectorAll('.quick-btn'));
+  if (btns.length) makeSortable(grid, btns, (from, to) => {
+    const q = gq(); const item = q.splice(from, 1)[0]; q.splice(to, 0, item); sq(q); renderQuick(); snd();
+  });
+}
+const origRQuick = renderQuick;
+renderQuick = function() { origRQuick(); setTimeout(initHomeDrag, 50); };
+
