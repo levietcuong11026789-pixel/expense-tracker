@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'expense-v7';
+﻿const CACHE_NAME = 'expense-v8';
 const ASSETS = [
   './',
   './index.html',
