@@ -95,6 +95,8 @@
       <button class="modal-close" onclick="closeQuickModal()">✕</button>
       <div id="quick-icon" style="font-size:48px;margin-bottom:8px">🍜</div>
       <h2 id="quick-label">Ăn sáng</h2>
+      <div class="modal-label">📅 Ngày ghi:</div>
+      <input type="date" id="quick-date" class="text-input" style="text-align:center">
       <div class="modal-label">Nhập số tiền (đ):</div>
       <input type="number" id="quick-amount" class="text-input" placeholder="Nhập số tiền..." inputmode="numeric" style="font-size:22px;text-align:center;font-weight:800">
       <div class="modal-label">Mua gì / Chi gì:</div>
@@ -109,6 +111,8 @@
     <div class="modal-box">
       <button class="modal-close" onclick="closeAddModal()">✕</button>
       <h2 id="add-title">💸 Thêm chi tiêu</h2>
+      <div class="modal-label">📅 Ngày ghi:</div>
+      <input type="date" id="add-date" class="text-input" style="text-align:center">
       <div class="modal-label">Danh mục:</div>
       <div class="cat-grid" id="cat-grid"></div>
       <div class="modal-label">Số tiền (đ):</div>
@@ -187,6 +191,7 @@
       <div id="cal-detail" class="cal-detail hidden">
         <div class="cal-detail-title" id="cal-detail-title"></div>
         <div id="cal-detail-list"></div>
+        <div id="cal-detail-actions" style="display:flex;gap:8px;margin-top:10px"></div>
       </div>
     </div>
   </div>

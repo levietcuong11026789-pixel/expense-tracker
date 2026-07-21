@@ -43,6 +43,7 @@ html,body{min-height:100%;font-family:'Nunito',sans-serif;background:linear-grad
 .expense-row:hover{background:rgba(255,255,255,.1)}.exp-icon{font-size:24px}.exp-info{flex:1}.exp-name{font-size:14px;font-weight:700}.exp-note{font-size:12px;color:var(--text-dim)}.exp-val{font-size:15px;font-weight:800}
 /* MODALS */
 .modal{position:fixed;inset:0;z-index:500;display:flex;align-items:flex-end;justify-content:center}
+.modal.above-cal{z-index:600}
 @media(min-width:500px){.modal{align-items:center}}
 .modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)}
 .modal-box{position:relative;z-index:1;background:linear-gradient(160deg,#131833,#1c2450);border:1px solid var(--glass-b);border-radius:var(--r) var(--r) 0 0;padding:28px 24px 36px;width:100%;max-width:420px;text-align:center;animation:slide-up .3s ease;max-height:90vh;overflow-y:auto}
