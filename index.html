@@ -8,11 +8,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Chi Tiêu">
-  <meta name="theme-color" content="#0a0e1a">
+  <meta name="theme-color" content="#f0f4ff">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -22,53 +22,72 @@
     <p>Đang tải...</p>
   </div>
 
+  <div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
   <div id="app" class="hidden">
 
     <!-- TOP BAR -->
     <div class="topbar">
       <div class="topbar-left">
-        <div class="avatar">💰</div>
+        <div class="avatar"><span class="avatar-symbol">₫</span></div>
         <div>
           <div class="app-title">Sổ Chi Tiêu</div>
           <div class="date-txt" id="date-display"></div>
         </div>
       </div>
-      <div style="display:flex;gap:8px">
-        <button class="top-btn" onclick="openAiModal()">🤖</button>
-        <button class="top-btn" onclick="openStatsModal()">📊</button>
-        <button class="top-btn" onclick="openCalModal()">📅</button>
+      <div style="display:flex;gap:6px">
+        <button class="top-btn" onclick="openCurrencyModal()" title="Quy đổi tiền tệ">💱</button>
+        <button class="top-btn" onclick="openNewsModal()" title="Tin tức">📰</button>
+        <button class="top-btn" onclick="openAiModal()" title="AI tư vấn">🤖</button>
+        <button class="top-btn" onclick="openStatsModal()" title="Thống kê">📊</button>
+        <button class="top-btn" onclick="openCalModal()" title="Lịch">📅</button>
+        <button class="top-btn" onclick="openHistoryModal()" title="Lịch sử tháng">🗂️</button>
+        <button class="top-btn" onclick="openReportModal()" title="Bảng kê chi tiết tháng">📑</button>
       </div>
     </div>
 
-    <!-- HERO: THU CHI -->
+    <!-- HERO -->
     <div class="hero">
       <div class="hero-cards">
-        <div class="hero-card red-card">
+        <div class="hero-card red-card" onclick="openCurrencyModalWith('expense')">
           <div class="hc-label">💸 Chi tiêu</div>
           <div class="hc-amount" id="hero-expense">0 đ</div>
           <div class="hc-sub">Hôm nay</div>
+          <div class="hc-fx" id="hero-expense-fx"></div>
         </div>
-        <div class="hero-card green-card">
+        <div class="hero-card green-card" onclick="openCurrencyModalWith('income')">
           <div class="hc-label">💰 Thu nhập</div>
           <div class="hc-amount" id="hero-income">0 đ</div>
           <div class="hc-sub">Hôm nay</div>
+          <div class="hc-fx" id="hero-income-fx"></div>
         </div>
       </div>
-      <div class="balance-bar">
-        <span>📊 Số dư tháng:</span>
-        <strong id="hero-balance" class="green-txt">0 đ</strong>
+      <div class="balance-card" onclick="openCurrencyModalWith('balance')">
+        <div class="bc-left">
+          <div class="bc-label">📊 Số dư tháng</div>
+          <div class="bc-fx" id="hero-balance-fx"></div>
+        </div>
+        <strong id="hero-balance" class="green-txt bc-amount">0 đ</strong>
       </div>
       <div class="stats-row">
-        <div class="stat-pill"><span>Tuần</span><strong id="week-expense" class="red-txt">0đ</strong></div>
-        <div class="stat-pill"><span>Tuần thu</span><strong id="week-income" class="green-txt">0đ</strong></div>
-        <div class="stat-pill"><span>Tháng chi</span><strong id="month-expense" class="gold-txt">0đ</strong></div>
+        <div class="stat-pill"><span class="sp-icon">📅</span><span class="sp-label">Tuần chi</span><strong id="week-expense" class="red-txt">0đ</strong></div>
+        <div class="stat-pill"><span class="sp-icon">💚</span><span class="sp-label">Tuần thu</span><strong id="week-income" class="green-txt">0đ</strong></div>
+        <div class="stat-pill"><span class="sp-icon">🗓️</span><span class="sp-label">Tháng chi</span><strong id="month-expense" class="gold-txt">0đ</strong></div>
       </div>
+      <button class="hero-report-btn" onclick="openReportModal()">
+        <span>📑 Bảng kê chi tiết tháng</span>
+        <span class="hrb-arrow">➔</span>
+      </button>
     </div>
 
     <!-- QUICK ADD -->
     <div class="section-block">
       <div class="section-title">
-        ⚡ Thêm nhanh
+        <span>⚡ Thêm nhanh</span>
         <button class="edit-quick-btn" onclick="openQuickSettings()">✏️</button>
       </div>
       <div class="quick-grid" id="quick-grid"></div>
@@ -88,24 +107,30 @@
 
   </div>
 
-  <!-- QUICK ADD AMOUNT MODAL -->
+  <!-- QUICK ADD MODAL -->
   <div id="quick-modal" class="modal hidden">
     <div class="modal-backdrop" onclick="closeQuickModal()"></div>
     <div class="modal-box">
       <button class="modal-close" onclick="closeQuickModal()">✕</button>
       <div id="quick-icon" style="font-size:48px;margin-bottom:8px">🍜</div>
       <h2 id="quick-label">Ăn sáng</h2>
-      <div class="modal-label">📅 Ngày ghi:</div>
-      <input type="date" id="quick-date" class="text-input" style="text-align:center">
+      <div id="quick-subitems" class="hidden"></div>
+      <div id="quick-cat-section" class="hidden">
+        <div class="modal-label">📂 Chọn danh mục:</div>
+        <div class="quick-cat-grid" id="quick-cat-grid"></div>
+      </div>
+      <div class="modal-label">&#128197; Ng&#224;y ghi:</div>
+      <input type="date" id="quick-date" class="text-input date-styled-input">
       <div class="modal-label">Nhập số tiền (đ):</div>
-      <input type="number" id="quick-amount" class="text-input" placeholder="Nhập số tiền..." inputmode="numeric" style="font-size:22px;text-align:center;font-weight:800">
+      <div id="quick-amt-suggestions" class="amt-suggestions"></div>
+      <input type="text" id="quick-amount" class="text-input amount-input" placeholder="Nhập số tiền..." inputmode="numeric" style="font-size:26px;text-align:center;font-weight:900;letter-spacing:1px">
       <div class="modal-label">Mua gì / Chi gì:</div>
       <input type="text" id="quick-note" class="text-input" placeholder="Vd: Phở bò, Grab đi làm...">
       <button class="btn-submit" onclick="confirmQuickAdd()">💸 Lưu</button>
     </div>
   </div>
 
-  <!-- ADD MODAL (expense/income) -->
+  <!-- ADD MODAL -->
   <div id="add-modal" class="modal hidden">
     <div class="modal-backdrop" onclick="closeAddModal()"></div>
     <div class="modal-box">
@@ -115,8 +140,13 @@
       <input type="date" id="add-date" class="text-input" style="text-align:center">
       <div class="modal-label">Danh mục:</div>
       <div class="cat-grid" id="cat-grid"></div>
+      <div id="add-subitems-section" class="hidden">
+        <div class="modal-label">&#128220; Chọn loại chi tiêu:</div>
+        <div id="add-subitems-grid" class="sub-choice-grid"></div>
+      </div>
       <div class="modal-label">Số tiền (đ):</div>
-      <input type="number" id="add-amount" class="text-input" placeholder="50000" inputmode="numeric">
+      <div id="add-amt-suggestions" class="amt-suggestions"></div>
+      <input type="text" id="add-amount" class="text-input amount-input" placeholder="0" inputmode="numeric" style="font-size:26px;text-align:center;font-weight:900;letter-spacing:1px">
       <div class="modal-label">Ghi chú (tùy chọn):</div>
       <input type="text" id="add-note" class="text-input" placeholder="Ghi chú...">
       <button class="btn-submit" id="add-submit-btn" onclick="submitEntry()">💾 Lưu</button>
@@ -130,7 +160,7 @@
       <button class="modal-close" onclick="closeEditModal()">✕</button>
       <h2>✏️ Sửa giao dịch</h2>
       <div class="modal-label">Số tiền (đ):</div>
-      <input type="number" id="edit-amount" class="text-input" inputmode="numeric">
+      <input type="text" id="edit-amount" class="text-input amount-input" inputmode="numeric" style="font-size:26px;text-align:center;font-weight:900;letter-spacing:1px">
       <div class="modal-label">Ghi chú:</div>
       <input type="text" id="edit-note" class="text-input">
       <button class="btn-submit" onclick="saveEdit()">💾 Lưu</button>
@@ -155,7 +185,7 @@
     </div>
   </div>
 
-  <!-- STATS MODAL -->
+  <!-- STATS MODAL (with chart tab) -->
   <div id="stats-modal" class="modal hidden">
     <div class="modal-backdrop" onclick="closeStatsModal()"></div>
     <div class="modal-box stats-box">
@@ -167,12 +197,30 @@
         <button class="stab" id="stab-month" onclick="switchTab('month')">🗓️ Tháng</button>
         <button class="stab" id="stab-compare" onclick="switchTab('compare')">⚖️ Thu/Chi</button>
         <button class="stab" id="stab-cat" onclick="switchTab('cat')">📂 Danh mục</button>
+        <button class="stab" id="stab-chart" onclick="switchTab('chart')">📈 Biểu đồ</button>
       </div>
       <div id="spanel-day" class="spanel"><div class="stat-hero" id="sd-total">0 đ</div><div class="stat-hero-sub">Tổng chi hôm nay</div><div id="sd-list" class="stat-list"></div></div>
       <div id="spanel-week" class="spanel hidden"><div class="stat-hero" id="sw-total">0 đ</div><div class="stat-hero-sub">Tổng chi tuần này</div><div id="sw-list" class="stat-list"></div><div class="stat-best" id="sw-best"></div></div>
       <div id="spanel-month" class="spanel hidden"><div class="stat-hero" id="sm-total">0 đ</div><div class="stat-hero-sub">Tổng chi tháng này</div><div class="stat-summary-row" id="sm-summary"></div><div id="sm-weeks" class="stat-list"></div></div>
       <div id="spanel-compare" class="spanel hidden"><div id="sc-compare"></div></div>
       <div id="spanel-cat" class="spanel hidden"><p class="stat-hero-sub" style="margin-bottom:12px">Top danh mục chi nhiều nhất</p><div id="sc-cat-list" class="stat-list"></div></div>
+      <!-- CHART PANEL -->
+      <div id="spanel-chart" class="spanel hidden">
+        <div class="chart-period-tabs">
+          <button class="cptab active" id="cptab-14days" onclick="switchChartPeriod('14days')">14 ngày</button>
+          <button class="cptab" id="cptab-weeks" onclick="switchChartPeriod('weeks')">8 tuần</button>
+          <button class="cptab" id="cptab-months" onclick="switchChartPeriod('months')">12 tháng</button>
+          <button class="cptab" id="cptab-years" onclick="switchChartPeriod('years')">Theo năm</button>
+        </div>
+        <div class="chart-legend">
+          <span class="chart-legend-item"><span class="chart-dot red-dot"></span>Chi tiêu</span>
+          <span class="chart-legend-item"><span class="chart-dot green-dot"></span>Thu nhập</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="main-chart"></canvas>
+        </div>
+        <div class="chart-summary" id="chart-summary"></div>
+      </div>
     </div>
   </div>
 
@@ -196,7 +244,7 @@
     </div>
   </div>
 
-  <!-- AI ADVISOR MODAL -->
+  <!-- AI MODAL -->
   <div id="ai-modal" class="modal hidden">
     <div class="modal-backdrop" onclick="closeAiModal()"></div>
     <div class="modal-box ai-box">
@@ -232,8 +280,140 @@
     </div>
   </div>
 
+  <!-- CURRENCY MODAL (2-way) -->
+  <div id="currency-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeCurrencyModal()"></div>
+    <div class="modal-box fx-box">
+      <button class="modal-close" onclick="closeCurrencyModal()">✕</button>
+      <h2>💱 Quy đổi tiền tệ</h2>
+      <!-- FROM / TO selectors -->
+      <div class="fx-pair-row">
+        <div class="fx-pair-col">
+          <div class="fx-pair-label">Từ</div>
+          <select id="fx-from" class="fx-select" onchange="onFxPairChange()"></select>
+        </div>
+        <button class="fx-swap-btn" onclick="swapFxPair()" title="Hoán đổi">⇄</button>
+        <div class="fx-pair-col">
+          <div class="fx-pair-label">Sang</div>
+          <select id="fx-to" class="fx-select" onchange="onFxPairChange()"></select>
+        </div>
+      </div>
+      <!-- Amount input -->
+      <div class="fx-input-wrap">
+        <span class="fx-input-prefix" id="fx-from-symbol">₫</span>
+        <input type="text" id="fx-amount" class="text-input fx-amount-input" placeholder="0" inputmode="numeric">
+      </div>
+      <!-- Result -->
+      <div class="fx-result-card" id="fx-result-card">
+        <div class="fx-result-label" id="fx-result-label">Kết quả</div>
+        <div class="fx-result-value" id="fx-result-value">—</div>
+        <div class="fx-result-rate" id="fx-result-rate"></div>
+      </div>
+      <!-- Quick presets (chỉ khi from=VND) -->
+      <div class="fx-presets" id="fx-presets">
+        <button class="fx-preset-btn" onclick="setFxPreset('today-expense')">💸 Chi hôm nay</button>
+        <button class="fx-preset-btn" onclick="setFxPreset('month-expense')">🗓️ Chi tháng</button>
+        <button class="fx-preset-btn" onclick="setFxPreset('balance')">📊 Số dư</button>
+      </div>
+      <!-- Full grid khi from=VND -->
+      <div id="fx-grid-section">
+        <div class="fx-rate-status" id="fx-rate-status">🔄 Đang tải tỷ giá...</div>
+        <div class="fx-grid" id="fx-grid"></div>
+      </div>
+      <div class="fx-note" id="fx-updated"></div>
+    </div>
+  </div>
+
+  <!-- NEWS MODAL -->
+  <div id="news-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeNewsModal()"></div>
+    <div class="modal-box news-box">
+      <button class="modal-close" onclick="closeNewsModal()">✕</button>
+      <h2>📰 Tin tức nóng hôm nay</h2>
+      <!-- Source tabs -->
+      <div class="news-source-tabs">
+        <button class="nstab active" id="nstab-vnexpress" onclick="switchNews('vnexpress')">VnExpress</button>
+        <button class="nstab" id="nstab-tuoitre" onclick="switchNews('tuoitre')">Tuổi Trẻ</button>
+        <button class="nstab" id="nstab-thanhnien" onclick="switchNews('thanhnien')">Thanh Niên</button>
+        <button class="nstab" id="nstab-dantri" onclick="switchNews('dantri')">Dân Trí</button>
+      </div>
+      <!-- Category tabs -->
+      <div class="news-cat-tabs">
+        <button class="nctab active" id="nctab-hot" onclick="switchNewsCat('hot')">🔥 Nóng</button>
+        <button class="nctab" id="nctab-business" onclick="switchNewsCat('business')">💼 Kinh tế</button>
+        <button class="nctab" id="nctab-world" onclick="switchNewsCat('world')">🌍 Thế giới</button>
+        <button class="nctab" id="nctab-sport" onclick="switchNewsCat('sport')">⚽ Thể thao</button>
+      </div>
+      <div id="news-list" class="news-list">
+        <div class="news-loading">🔄 Đang tải tin tức...</div>
+      </div>
+      <div class="news-footer" id="news-footer"></div>
+    </div>
+  </div>
+
+  <!-- MONTHLY HISTORY MODAL -->
+  <div id="history-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeHistoryModal()"></div>
+    <div class="modal-box history-box">
+      <button class="modal-close" onclick="closeHistoryModal()">✕</button>
+      <h2>🗂️ Lịch sử chi tiêu</h2>
+      <div class="hist-nav">
+        <button class="cal-nav" onclick="histPrev()">◀</button>
+        <h3 id="hist-month-label"></h3>
+        <button class="cal-nav" onclick="histNext()">▶</button>
+      </div>
+      <div class="hist-summary" id="hist-summary"></div>
+      <div class="hist-cat-breakdown" id="hist-cat-breakdown"></div>
+      <div class="hist-days" id="hist-days"></div>
+    </div>
+  </div>
+
+  <!-- MONTHLY DETAILED REPORT MODAL -->
+  <div id="report-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeReportModal()"></div>
+    <div class="modal-box report-box">
+      <button class="modal-close" onclick="closeReportModal()">✕</button>
+      <h2>📑 Bảng Kê Chi Tiết Tháng</h2>
+      
+      <!-- Nav Tháng -->
+      <div class="hist-nav">
+        <button class="cal-nav" onclick="reportPrev()">◀</button>
+        <h3 id="report-month-label"></h3>
+        <button class="cal-nav" onclick="reportNext()">▶</button>
+      </div>
+
+      <!-- Tóm tắt tháng -->
+      <div class="report-summary" id="report-summary"></div>
+
+      <!-- Toolbar: Bộ lọc loại, Tìm kiếm, Mở rộng/Thu gọn, Xuất Excel & In -->
+      <div class="report-toolbar">
+        <div class="report-type-tabs">
+          <button class="rpt-tab active" id="rpt-type-expense" onclick="switchReportType('expense')">💸 Chi tiêu</button>
+          <button class="rpt-tab" id="rpt-type-income" onclick="switchReportType('income')">💰 Thu nhập</button>
+          <button class="rpt-tab" id="rpt-type-all" onclick="switchReportType('all')">🔄 Tất cả</button>
+        </div>
+
+        <div class="report-search-wrap">
+          <span class="report-search-icon">🔍</span>
+          <input type="text" id="report-search-input" class="text-input report-search-input" placeholder="Tìm khoản chi, ghi chú, danh mục..." oninput="onReportSearch(this.value)">
+        </div>
+
+        <div class="report-actions-row">
+          <button class="report-action-btn" id="report-toggle-all-btn" onclick="toggleAllReportCats()">📂 Mở tất cả</button>
+          <button class="report-action-btn green-btn-outline" onclick="exportReportCsv()">📥 Xuất Excel</button>
+          <button class="report-action-btn blue-btn-outline" onclick="printReport()">🖨️ In / PDF</button>
+        </div>
+      </div>
+
+      <!-- Danh sách tất cả các danh mục và bảng chi tiết từng khoản -->
+      <div id="report-content" class="report-content"></div>
+    </div>
+  </div>
+
   <div id="toast" class="toast hidden"></div>
 
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
